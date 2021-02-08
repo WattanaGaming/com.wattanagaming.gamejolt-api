@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Username and token caching.
 - Error check for API calls.
 
+### Removed
+- Redundant `Debug.Log()`s when making API calls.
+
 ## 0.1.0 - 2021-02-08
 ### Added
 - First implementation of the `GetServerTime()` method.
