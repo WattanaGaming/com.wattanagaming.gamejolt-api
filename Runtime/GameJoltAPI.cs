@@ -102,7 +102,7 @@ namespace WattanaGaming.GameJoltAPI
                         Debug.LogError("Data processing error whilst making a web request.");
                         break;
                     case UnityWebRequest.Result.Success:
-                        Debug.Log("Response received.");
+                        // Debug.Log("Response received.");
                         callback?.Invoke(webRequest);
                         break;
                 }
