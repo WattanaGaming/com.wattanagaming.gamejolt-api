@@ -1,0 +1,10 @@
+{
+  "name": "com.wattanagaming.gj-unity-api",
+  "version": "0.0.1",
+  "displayName": "GameJolt API",
+  "type": "library",
+  "author": {
+    "name": "Atirut Wattanamongkol"
+  },
+  "description": "A library for communicating with GameJolt's Game API"
+}
