@@ -28,8 +28,8 @@ namespace WattanaGaming.GameJoltAPI
         public static string gameID;
 
         // User credentials are cached for later use after authentication.
-        public static string username { get; private set; }
-        public static string userToken { get; private set; }
+        public static string username { get; private set; } = "";
+        public static string userToken { get; private set; } = "";
         public static bool isAuthenticated { get; private set; }
 
         private static string baseURL = "https://api.gamejolt.com/api/game/v1_2/";
@@ -86,7 +86,7 @@ namespace WattanaGaming.GameJoltAPI
         {
             using (UnityWebRequest webRequest = UnityWebRequest.Get(uri))
             {
-                Debug.Log("Sending web request and waiting for response...");
+                // Debug.Log("Sending web request and waiting for response...");
                 // Request and wait for the desired page.
                 yield return webRequest.SendWebRequest();
 
@@ -96,10 +96,10 @@ namespace WattanaGaming.GameJoltAPI
                 switch (webRequest.result)
                 {
                     case UnityWebRequest.Result.ConnectionError:
-                        Debug.LogError("Connection error has occured.");
+                        Debug.LogError("Connection error whilst making a web request.");
                         break;
                     case UnityWebRequest.Result.DataProcessingError:
-                        Debug.LogError("Data processing error has occured.");
+                        Debug.LogError("Data processing error whilst making a web request.");
                         break;
                     case UnityWebRequest.Result.Success:
                         Debug.Log("Response received.");
