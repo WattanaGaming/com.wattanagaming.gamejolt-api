@@ -42,9 +42,15 @@ namespace WattanaGaming.GameJoltAPI
         public void GetServerTime(System.Action<DateTime> callback = null)
         {
             string request = baseURL + "time/?game_id=" + gameID;
+            Debug.Log("Fetching GameJolt server time");
             StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
             {
                 JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
+                if (response["success"] == "false")
+                {
+                    Debug.LogError("Error: " + response["message"]);
+                    return;
+                }
                 DateTime serverTime = new DateTime(response["year"].AsInt, response["month"].AsInt, response["day"].AsInt, response["hour"].AsInt, response["minute"].AsInt, response["second"].AsInt);
                 callback?.Invoke(serverTime);
             }));
