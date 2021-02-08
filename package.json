@@ -1,6 +1,6 @@
 {
   "name": "com.wattanagaming.gj-unity-api",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "displayName": "GameJolt API",
   "type": "library",
   "author": {
