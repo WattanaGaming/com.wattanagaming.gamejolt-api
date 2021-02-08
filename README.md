@@ -1,2 +1,2 @@
-# com.wattanagaming.gamejolt-api
- A GameJolt API wrapper for Unity
+# Unity GameJolt API
+A GameJolt API wrapper for Unity
