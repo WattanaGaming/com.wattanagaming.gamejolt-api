@@ -34,6 +34,7 @@ namespace WattanaGaming.GameJoltAPI
 
         private static string baseURL = "https://api.gamejolt.com/api/game/v1_2/";
 
+        public event System.Action<bool> onAuthenticate;
 
         void Awake()
         {
@@ -52,6 +53,7 @@ namespace WattanaGaming.GameJoltAPI
                     Debug.LogError("Authentication failed. " + response["message"]);
                     username = userToken = "";
                     isAuthenticated = false;
+                    onAuthenticate.Invoke(false);
                     return;
                 }
                 Debug.Log("Authentication successful.");
@@ -59,6 +61,7 @@ namespace WattanaGaming.GameJoltAPI
                 userToken = token;
                 isAuthenticated = true;
                 callback?.Invoke();
+                onAuthenticate.Invoke(true);
             }));
         }
 
