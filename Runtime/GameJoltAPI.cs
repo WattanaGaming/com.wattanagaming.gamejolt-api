@@ -27,8 +27,8 @@ namespace WattanaGaming.GameJoltAPI
         public static string gameKey;
         public static string gameID;
 
-        public static string username;
-        public static string userToken;
+        public static string username { get; private set; }
+        public static string userToken { get; private set; }
         public static bool isLoggedIn { get; private set; }
 
         private static string baseURL = "https://api.gamejolt.com/api/game/v1_2/";
