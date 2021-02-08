@@ -77,6 +77,7 @@ namespace WattanaGaming.GameJoltAPI
                     Debug.LogError("Error: " + response["message"]);
                     return;
                 }
+                Debug.Log("Fetched server time.");
                 DateTime serverTime = new DateTime(response["year"].AsInt, response["month"].AsInt, response["day"].AsInt, response["hour"].AsInt, response["minute"].AsInt, response["second"].AsInt);
                 callback?.Invoke(serverTime);
             }));
