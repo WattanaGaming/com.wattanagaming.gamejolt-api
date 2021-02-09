@@ -78,11 +78,15 @@ namespace WattanaGaming.GameJoltAPI
             }));
         }
 
+        /// <summary>
+        /// Grant the user a trophy with the specified ID.
+        /// </summary>
+        /// <param name="id"></param>
         public void GrantTrophy(int id)
         {
             if (!isAuthenticated)
             {
-                Debug.LogError("Attempt to grant trophy data without an authenticated user.");
+                Debug.LogError("Attempt to grant trophy without an authenticated user.");
                 return;
             }
             string request = $"{baseURL}trophies/add-achieved/?game_id={gameID}&username={username}&user_token={userToken}&trophy_id={id}";
@@ -100,11 +104,15 @@ namespace WattanaGaming.GameJoltAPI
             }));
         }
 
+        /// <summary>
+        /// Revoke a trophy with the specified ID from the user.
+        /// </summary>
+        /// <param name="id"></param>
         public void RevokeTrophy(int id)
         {
             if (!isAuthenticated)
             {
-                Debug.LogError("Attempt to grant trophy data without an authenticated user.");
+                Debug.LogError("Attempt to revoke trophy without an authenticated user.");
                 return;
             }
             string request = $"{baseURL}trophies/remove-achieved/?game_id={gameID}&username={username}&user_token={userToken}&trophy_id={id}";
