@@ -24,8 +24,8 @@ namespace WattanaGaming.GameJoltAPI
             }
         }
 
-        public static string gameKey;
         public static string gameID;
+        public static string gameKey;
 
         // User credentials are cached for later use after authentication.
         public static string username { get; private set; }
@@ -34,6 +34,9 @@ namespace WattanaGaming.GameJoltAPI
 
         private static string baseURL = "https://api.gamejolt.com/api/game/v1_2/";
 
+        /// <summary>
+        /// Gets triggered upon an authentication attempt. Boolean indicates whether the attempt is successful or not.
+        /// </summary>
         public event System.Action<bool> OnAuthenticate;
 
         void Awake()
@@ -41,6 +44,12 @@ namespace WattanaGaming.GameJoltAPI
             _instance = this;
         }
 
+        /// <summary>
+        /// Authenticate a GameJolt user with the specified token.
+        /// </summary>
+        /// <param name="name">The user's GJ username.</param>
+        /// <param name="token">The user's GJ token.</param>
+        /// <param name="callback">Optional callback.</param>
         public void Authenticate(string name, string token, System.Action callback = null)
         {
             string request = $"{baseURL}users/auth/?game_id={gameID}&username={name}&user_token={token}";
@@ -63,6 +72,104 @@ namespace WattanaGaming.GameJoltAPI
                 callback?.Invoke();
                 OnAuthenticate?.Invoke(true);
             }));
+        }
+
+        /// <summary>
+        /// Get informations about a trophy.
+        /// </summary>
+        /// <param name="id">The ID of the trophy to fetch.</param>
+        /// <param name="callback">Optional callback</param>
+        public void FetchTrophy(int id, System.Action<TrophyData> callback=null)
+        {
+            if (!isAuthenticated)
+            {
+                Debug.LogError("Attempt to fetch trophy data without an authenticated user.");
+                return;
+            }
+            string request = $"{baseURL}trophies/fetch/?game_id={gameID}&username={username}&user_token={userToken}&trophy_id={id}";
+            Debug.Log("Fetching trophy data...");
+            StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
+            {
+                JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
+                if (response["success"] == "false")
+                {
+                    Debug.LogError("Error: " + response["message"]);
+                    return;
+                }
+                TrophyData trophyData = ConstructTrophy(response["trophies"].AsArray[0]);
+                callback?.Invoke(trophyData);
+            }));
+        }
+
+        /// <summary>
+        /// Get a list of trophies
+        /// </summary>
+        /// <param name="all">Get all of the trophies if set to true.</param>
+        /// <param name="achieved">Only list achieved trophies if true and vice versa. Will be ignored if `all` is true.</param>
+        /// <param name="callback">Optional callback.</param>
+        public void ListTrophies(bool all, bool achieved, System.Action<List<TrophyData>> callback = null)
+        {
+            if (!isAuthenticated)
+            {
+                Debug.LogError("Attempt to list trophies without an authenticated user.");
+                return;
+            }
+            string request;
+            if (all)
+            {
+                request = $"{baseURL}trophies/fetch/?game_id={gameID}&username={username}&user_token={userToken}";
+            }
+            else
+            {
+                request = $"{baseURL}trophies/fetch/?game_id={gameID}&username={username}&user_token={userToken}&achieved={achieved.ToString().ToLower()}";
+            }
+            Debug.Log("Fetching trophies list...");
+            StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
+            {
+                JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
+                if (response["success"] == "false")
+                {
+                    Debug.LogError("Error: " + response["message"]);
+                    return;
+                }
+                JSONArray trophies = response["trophies"].AsArray;
+                List<TrophyData> trophyDatas = new List<TrophyData>();
+                if (trophies != null)
+                {
+                    foreach (JSONObject trophy in trophies)
+                    {
+                        trophyDatas.Add(ConstructTrophy(trophy));
+                    }
+                }
+                callback?.Invoke(trophyDatas);
+            }));
+        }
+
+        /// <summary>
+        /// Construct a TrophyData from a JSONNode
+        /// </summary>
+        /// <param name="trophy"></param>
+        /// <returns></returns>
+        TrophyData ConstructTrophy(JSONNode trophy)
+        {
+            TrophyData trophyData = new TrophyData();
+
+            trophyData.id = trophy["id"];
+            trophyData.title = trophy["title"];
+            trophyData.diffuculty = trophy["diffuculty"];
+            trophyData.description = trophy["description"];
+            trophyData.imageURL = trophy["image_url"];
+
+            if (trophy["achieved"] == "true")
+            {
+                trophyData.achieved = true;
+            }
+            else
+            {
+                trophyData.achieved = false;
+            }
+
+            return trophyData;
         }
 
         public void GetServerTime(System.Action<DateTime> callback = null)
