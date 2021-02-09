@@ -30,7 +30,9 @@ namespace WattanaGaming.GameJoltAPI
         // User credentials are cached for later use after authentication.
         public static string username { get; private set; }
         public static string userToken { get; private set; }
+
         public static bool isAuthenticated { get; private set; }
+        public static bool isAuthenticating { get; private set; }
 
         private static string baseURL = "https://api.gamejolt.com/api/game/v1_2/";
 
@@ -49,21 +51,28 @@ namespace WattanaGaming.GameJoltAPI
         }
 
         /// <summary>
-        /// Authenticate a GameJolt user with the specified token.
+        /// Authenticate a GameJolt user with the specified username and token.
         /// </summary>
         /// <param name="name">The user's GJ username.</param>
         /// <param name="token">The user's GJ token.</param>
-        /// <param name="callback">Optional callback.</param>
-        public void Authenticate(string name, string token, System.Action callback = null)
+        /// <param name="callback">Optional callback. Gets invoked upon a successful authentication.</param>
+        /// <param name="forced">Force a re-authentication.</param>
+        public void Authenticate(string name, string token, System.Action callback = null, bool forced = false)
         {
+            if ((isAuthenticated && !forced) || isAuthenticating)
+            {
+                Debug.LogWarning("Already authenticated or is currently authenticating.");
+                return;
+            }
+            isAuthenticating = true;
             string request = $"{baseURL}users/auth/?game_id={gameID}&username={name}&user_token={token}";
-            Debug.Log("Attempting to authenticate as " + name + "...");
+            Debug.Log($"Attempting to authenticate as {name}...");
             StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
             {
                 JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
                 if (response["success"] == "false")
                 {
-                    Debug.LogError("Authentication failed. " + response["message"]);
+                    Debug.LogError($"Authentication failed. {response["message"]}");
                     username = userToken = "";
                     isAuthenticated = false;
                     OnAuthenticate?.Invoke(false);
@@ -73,6 +82,7 @@ namespace WattanaGaming.GameJoltAPI
                 username = name;
                 userToken = token;
                 isAuthenticated = true;
+                isAuthenticating = false;
                 callback?.Invoke();
                 OnAuthenticate?.Invoke(true);
             }));
@@ -90,13 +100,13 @@ namespace WattanaGaming.GameJoltAPI
                 return;
             }
             string request = $"{baseURL}trophies/add-achieved/?game_id={gameID}&username={username}&user_token={userToken}&trophy_id={id}";
-            Debug.Log("Granting trophy " + id + "...");
+            Debug.Log($"Granting trophy {id}...");
             StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
             {
                 JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
                 if (response["success"] == "false")
                 {
-                    Debug.LogError("Error: " + response["message"]);
+                    Debug.LogError($"Error: {response["message"]}");
                     return;
                 }
                 Debug.Log("Trophy granted.");
@@ -116,13 +126,13 @@ namespace WattanaGaming.GameJoltAPI
                 return;
             }
             string request = $"{baseURL}trophies/remove-achieved/?game_id={gameID}&username={username}&user_token={userToken}&trophy_id={id}";
-            Debug.Log("Revoking trophy " + id + "...");
+            Debug.Log($"Revoking trophy {id}...");
             StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
             {
                 JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
                 if (response["success"] == "false")
                 {
-                    Debug.LogError("Error: " + response["message"]);
+                    Debug.LogError($"Error: {response["message"]}");
                     return;
                 }
                 Debug.Log("Trophy revoked.");
@@ -143,17 +153,17 @@ namespace WattanaGaming.GameJoltAPI
                 return;
             }
             string request = $"{baseURL}trophies/fetch/?game_id={gameID}&username={username}&user_token={userToken}&trophy_id={id}";
-            Debug.Log("Fetching trophy data for " + id + "...");
+            Debug.Log($"Fetching trophy data for {id}...");
             StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
             {
                 JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
                 if (response["success"] == "false")
                 {
-                    Debug.LogError("Error: " + response["message"]);
+                    Debug.LogError($"Error: {response["message"]}");
                     return;
                 }
                 Debug.Log("Fetched trophy data.");
-                TrophyData trophyData = ConstructTrophy(response["trophies"].AsArray[0]);
+                TrophyData trophyData = new TrophyData(response["trophies"].AsArray[0]);
                 callback?.Invoke(trophyData);
             }));
         }
@@ -186,7 +196,7 @@ namespace WattanaGaming.GameJoltAPI
                 JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
                 if (response["success"] == "false")
                 {
-                    Debug.LogError("Error: " + response["message"]);
+                    Debug.LogError($"Error: {response["message"]}");
                     return;
                 }
                 JSONArray trophies = response["trophies"].AsArray;
@@ -195,32 +205,12 @@ namespace WattanaGaming.GameJoltAPI
                 {
                     foreach (JSONObject trophy in trophies)
                     {
-                        trophyDatas.Add(ConstructTrophy(trophy));
+                        trophyDatas.Add(new TrophyData(trophy));
                     }
                 }
                 Debug.Log("Fetched trophy list.");
                 callback?.Invoke(trophyDatas);
             }));
-        }
-
-        /// <summary>
-        /// Construct a TrophyData from a JSONNode
-        /// </summary>
-        /// <param name="trophy"></param>
-        /// <returns></returns>
-        TrophyData ConstructTrophy(JSONNode trophy)
-        {
-            TrophyData trophyData = new TrophyData
-            {
-                id = trophy["id"],
-                title = trophy["title"],
-                difficulty = trophy["difficulty"],
-                description = trophy["description"],
-                imageURL = trophy["image_url"],
-                achieved = trophy["achieved"]
-            };
-
-            return trophyData;
         }
 
         public void GetServerTime(System.Action<DateTime> callback = null)
@@ -232,7 +222,7 @@ namespace WattanaGaming.GameJoltAPI
                 JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
                 if (response["success"] == "false")
                 {
-                    Debug.LogError("Error: " + response["message"]);
+                    Debug.LogError($"Error: {response["message"]}");
                     return;
                 }
                 Debug.Log("Fetched server time.");
@@ -265,7 +255,7 @@ namespace WattanaGaming.GameJoltAPI
 
         private string AddSignature(string strToSign)
         {
-            return strToSign + "&signature=" + Md5Sum(strToSign + gameKey);
+            return $"{strToSign}&signature={Md5Sum(strToSign + gameKey)}";
         }
         
         private string Md5Sum(string strToEncrypt)

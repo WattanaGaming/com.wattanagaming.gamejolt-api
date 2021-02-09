@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 0.3.2 - 2021-02-10
+### Added
+- New `forced` bool parameter to force a re-authentication when using `Authenticate()`.
+### Changed
+- `Authenticate()` now do not authenticate if `isAuthenticated` is already true and
+- `Authenticate()` also now blocks any authentication attempt if there is already an attempt going on.
+- `isAuthenticating` is also available for checking the authentication process.
+- `ConstructTrophy()` has been removed in favor of class constructor. The API now internally uses the constructor.
+
 ## 0.3.1 - 2021-02-09
 ### Changed
 - Simplified TrophyData object initialization.
