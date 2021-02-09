@@ -210,14 +210,15 @@ namespace WattanaGaming.GameJoltAPI
         /// <returns></returns>
         TrophyData ConstructTrophy(JSONNode trophy)
         {
-            TrophyData trophyData = new TrophyData();
-
-            trophyData.id = trophy["id"];
-            trophyData.title = trophy["title"];
-            trophyData.difficulty = trophy["difficulty"];
-            trophyData.description = trophy["description"];
-            trophyData.imageURL = trophy["image_url"];
-            trophyData.achieved = trophy["achieved"];
+            TrophyData trophyData = new TrophyData
+            {
+                id = trophy["id"],
+                title = trophy["title"],
+                difficulty = trophy["difficulty"],
+                description = trophy["description"],
+                imageURL = trophy["image_url"],
+                achieved = trophy["achieved"]
+            };
 
             return trophyData;
         }
