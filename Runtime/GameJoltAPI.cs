@@ -218,7 +218,6 @@ namespace WattanaGaming.GameJoltAPI
             else
             {
                 trophyData.isAchieved = false;
-                trophyData.achieved = "";
             }
 
             return trophyData;
