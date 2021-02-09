@@ -30,7 +30,9 @@ namespace WattanaGaming.GameJoltAPI
         // User credentials are cached for later use after authentication.
         public static string username { get; private set; }
         public static string userToken { get; private set; }
+
         public static bool isAuthenticated { get; private set; }
+        public static bool isAuthenticating { get; private set; }
 
         private static string baseURL = "https://api.gamejolt.com/api/game/v1_2/";
 
@@ -49,13 +51,20 @@ namespace WattanaGaming.GameJoltAPI
         }
 
         /// <summary>
-        /// Authenticate a GameJolt user with the specified token.
+        /// Authenticate a GameJolt user with the specified username and token.
         /// </summary>
         /// <param name="name">The user's GJ username.</param>
         /// <param name="token">The user's GJ token.</param>
-        /// <param name="callback">Optional callback.</param>
-        public void Authenticate(string name, string token, System.Action callback = null)
+        /// <param name="callback">Optional callback. Gets invoked upon a successful authentication.</param>
+        /// <param name="forced">Force a re-authentication.</param>
+        public void Authenticate(string name, string token, System.Action callback = null, bool forced = false)
         {
+            if ((isAuthenticated && !forced) || isAuthenticating)
+            {
+                Debug.LogWarning("Already authenticated or is authenticating.");
+                return;
+            }
+            isAuthenticating = true;
             string request = $"{baseURL}users/auth/?game_id={gameID}&username={name}&user_token={token}";
             Debug.Log("Attempting to authenticate as " + name + "...");
             StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
@@ -73,6 +82,7 @@ namespace WattanaGaming.GameJoltAPI
                 username = name;
                 userToken = token;
                 isAuthenticated = true;
+                isAuthenticating = false;
                 callback?.Invoke();
                 OnAuthenticate?.Invoke(true);
             }));
