@@ -12,7 +12,13 @@ namespace WattanaGaming.GameJoltAPI
         public string diffuculty;
         public string description;
         public string imageURL;
-        public bool achieved;
-        public DateTime achievedDate;
+        public bool isAchieved;
+        public string achieved;
+    }
+
+    public enum TrophyEventType
+    {
+        Grant,
+        Revoke
     }
 }

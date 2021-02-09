@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `FetchTrophy()` for getting informations about a trophy.
 - `ListTrophies()` to get a list of trophies.
+- Method summaries.
 
 ## 0.2.0
 ### Added

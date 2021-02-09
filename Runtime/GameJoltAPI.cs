@@ -35,9 +35,13 @@ namespace WattanaGaming.GameJoltAPI
         private static string baseURL = "https://api.gamejolt.com/api/game/v1_2/";
 
         /// <summary>
-        /// Gets triggered upon an authentication attempt. Boolean indicates whether the attempt is successful or not.
+        /// Gets invoked upon an authentication attempt. Boolean indicates whether the attempt is successful or not.
         /// </summary>
         public event System.Action<bool> OnAuthenticate;
+        /// <summary>
+        /// Gets invoked upon granting or revoking a trophy. Int indicates trophy ID and TrophyEventType indicates the event type(Grant or Revoke).
+        /// </summary>
+        public event System.Action<int, TrophyEventType> OnTrophyEvent;
 
         void Awake()
         {
@@ -74,6 +78,50 @@ namespace WattanaGaming.GameJoltAPI
             }));
         }
 
+        public void GrantTrophy(int id)
+        {
+            if (!isAuthenticated)
+            {
+                Debug.LogError("Attempt to grant trophy data without an authenticated user.");
+                return;
+            }
+            string request = $"{baseURL}trophies/add-achieved/?game_id={gameID}&username={username}&user_token={userToken}&trophy_id={id}";
+            Debug.Log("Granting trophy " + id + "...");
+            StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
+            {
+                JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
+                if (response["success"] == "false")
+                {
+                    Debug.LogError("Error: " + response["message"]);
+                    return;
+                }
+                Debug.Log("Trophy granted.");
+                OnTrophyEvent?.Invoke(id, TrophyEventType.Grant);
+            }));
+        }
+
+        public void RevokeTrophy(int id)
+        {
+            if (!isAuthenticated)
+            {
+                Debug.LogError("Attempt to grant trophy data without an authenticated user.");
+                return;
+            }
+            string request = $"{baseURL}trophies/remove-achieved/?game_id={gameID}&username={username}&user_token={userToken}&trophy_id={id}";
+            Debug.Log("Revoking trophy " + id + "...");
+            StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
+            {
+                JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
+                if (response["success"] == "false")
+                {
+                    Debug.LogError("Error: " + response["message"]);
+                    return;
+                }
+                Debug.Log("Trophy revoked.");
+                OnTrophyEvent?.Invoke(id, TrophyEventType.Revoke);
+            }));
+        }
+
         /// <summary>
         /// Get informations about a trophy.
         /// </summary>
@@ -87,7 +135,7 @@ namespace WattanaGaming.GameJoltAPI
                 return;
             }
             string request = $"{baseURL}trophies/fetch/?game_id={gameID}&username={username}&user_token={userToken}&trophy_id={id}";
-            Debug.Log("Fetching trophy data...");
+            Debug.Log("Fetching trophy data for " + id + "...");
             StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
             {
                 JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
@@ -96,6 +144,7 @@ namespace WattanaGaming.GameJoltAPI
                     Debug.LogError("Error: " + response["message"]);
                     return;
                 }
+                Debug.Log("Fetched trophy data.");
                 TrophyData trophyData = ConstructTrophy(response["trophies"].AsArray[0]);
                 callback?.Invoke(trophyData);
             }));
@@ -123,7 +172,7 @@ namespace WattanaGaming.GameJoltAPI
             {
                 request = $"{baseURL}trophies/fetch/?game_id={gameID}&username={username}&user_token={userToken}&achieved={achieved.ToString().ToLower()}";
             }
-            Debug.Log("Fetching trophies list...");
+            Debug.Log("Fetching trophy list...");
             StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
             {
                 JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
@@ -141,6 +190,7 @@ namespace WattanaGaming.GameJoltAPI
                         trophyDatas.Add(ConstructTrophy(trophy));
                     }
                 }
+                Debug.Log("Fetched trophy list.");
                 callback?.Invoke(trophyDatas);
             }));
         }
@@ -160,13 +210,15 @@ namespace WattanaGaming.GameJoltAPI
             trophyData.description = trophy["description"];
             trophyData.imageURL = trophy["image_url"];
 
-            if (trophy["achieved"] == "true")
+            if (trophy["achieved"] != "false")
             {
-                trophyData.achieved = true;
+                trophyData.isAchieved = true;
+                trophyData.achieved = trophy["achieved"];
             }
             else
             {
-                trophyData.achieved = false;
+                trophyData.isAchieved = false;
+                trophyData.achieved = "";
             }
 
             return trophyData;
