@@ -34,7 +34,7 @@ namespace WattanaGaming.GameJoltAPI
 
         private static string baseURL = "https://api.gamejolt.com/api/game/v1_2/";
 
-        public event System.Action<bool> onAuthenticate;
+        public event System.Action<bool> OnAuthenticate;
 
         void Awake()
         {
@@ -53,7 +53,7 @@ namespace WattanaGaming.GameJoltAPI
                     Debug.LogError("Authentication failed. " + response["message"]);
                     username = userToken = "";
                     isAuthenticated = false;
-                    onAuthenticate.Invoke(false);
+                    OnAuthenticate.Invoke(false);
                     return;
                 }
                 Debug.Log("Authentication successful.");
@@ -61,7 +61,7 @@ namespace WattanaGaming.GameJoltAPI
                 userToken = token;
                 isAuthenticated = true;
                 callback?.Invoke();
-                onAuthenticate.Invoke(true);
+                OnAuthenticate.Invoke(true);
             }));
         }
 
@@ -85,28 +85,26 @@ namespace WattanaGaming.GameJoltAPI
 
         IEnumerator GetRequest(string uri, System.Action<UnityWebRequest> callback = null)
         {
-            using (UnityWebRequest webRequest = UnityWebRequest.Get(uri))
+            UnityWebRequest webRequest = UnityWebRequest.Get(uri);
+            // Debug.Log("Sending web request and waiting for response...");
+            // Request and wait for the desired page.
+            yield return webRequest.SendWebRequest();
+
+            string[] pages = uri.Split('/');
+            int page = pages.Length - 1;
+
+            switch (webRequest.result)
             {
-                // Debug.Log("Sending web request and waiting for response...");
-                // Request and wait for the desired page.
-                yield return webRequest.SendWebRequest();
-
-                string[] pages = uri.Split('/');
-                int page = pages.Length - 1;
-
-                switch (webRequest.result)
-                {
-                    case UnityWebRequest.Result.ConnectionError:
-                        Debug.LogError("Connection error whilst making a web request.");
-                        break;
-                    case UnityWebRequest.Result.DataProcessingError:
-                        Debug.LogError("Data processing error whilst making a web request.");
-                        break;
-                    case UnityWebRequest.Result.Success:
-                        // Debug.Log("Response received.");
-                        callback?.Invoke(webRequest);
-                        break;
-                }
+                case UnityWebRequest.Result.ConnectionError:
+                    Debug.LogError("Connection error whilst making a web request.");
+                    break;
+                case UnityWebRequest.Result.DataProcessingError:
+                    Debug.LogError("Data processing error whilst making a web request.");
+                    break;
+                case UnityWebRequest.Result.Success:
+                    // Debug.Log("Response received.");
+                    callback?.Invoke(webRequest);
+                    break;
             }
         }
 
