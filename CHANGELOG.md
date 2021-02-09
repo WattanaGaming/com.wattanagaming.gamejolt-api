@@ -6,14 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- `GrantTrophy()` for granting trophies and
+- `RevokeTrophy()` for revoking them.
 - `FetchTrophy()` for getting informations about a trophy.
 - `ListTrophies()` to get a list of trophies.
-- Method summaries.
+- `OnTrophy` event.
+- Documented methods with summaries.
 
 ## 0.2.0
 ### Added
 - Basic user authentication.
-- `onAuthenticate` event.
+- `OnAuthenticate` event.
 - Username and token caching.
 - Error check for API calls.
 

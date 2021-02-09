@@ -9,11 +9,15 @@ namespace WattanaGaming.GameJoltAPI
     {
         public int id;
         public string title;
-        public string diffuculty;
+        public string difficulty;
         public string description;
         public string imageURL;
-        public bool isAchieved;
         public string achieved;
+
+        public override string ToString()
+        {
+            return $"ID: {id}, Title: {title}, Difficulty: {difficulty}, Description: {description}, Achieved: {achieved}";
+        }
     }
 
     public enum TrophyEventType

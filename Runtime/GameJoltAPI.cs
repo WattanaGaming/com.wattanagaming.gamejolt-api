@@ -41,7 +41,7 @@ namespace WattanaGaming.GameJoltAPI
         /// <summary>
         /// Gets invoked upon granting or revoking a trophy. Int indicates trophy ID and TrophyEventType indicates the event type(Grant or Revoke).
         /// </summary>
-        public event System.Action<int, TrophyEventType> OnTrophyEvent;
+        public event System.Action<int, TrophyEventType> OnTrophy;
 
         void Awake()
         {
@@ -100,7 +100,7 @@ namespace WattanaGaming.GameJoltAPI
                     return;
                 }
                 Debug.Log("Trophy granted.");
-                OnTrophyEvent?.Invoke(id, TrophyEventType.Grant);
+                OnTrophy?.Invoke(id, TrophyEventType.Grant);
             }));
         }
 
@@ -126,7 +126,7 @@ namespace WattanaGaming.GameJoltAPI
                     return;
                 }
                 Debug.Log("Trophy revoked.");
-                OnTrophyEvent?.Invoke(id, TrophyEventType.Revoke);
+                OnTrophy?.Invoke(id, TrophyEventType.Revoke);
             }));
         }
 
@@ -214,19 +214,10 @@ namespace WattanaGaming.GameJoltAPI
 
             trophyData.id = trophy["id"];
             trophyData.title = trophy["title"];
-            trophyData.diffuculty = trophy["diffuculty"];
+            trophyData.difficulty = trophy["difficulty"];
             trophyData.description = trophy["description"];
             trophyData.imageURL = trophy["image_url"];
-
-            if (trophy["achieved"] != "false")
-            {
-                trophyData.isAchieved = true;
-                trophyData.achieved = trophy["achieved"];
-            }
-            else
-            {
-                trophyData.isAchieved = false;
-            }
+            trophyData.achieved = trophy["achieved"];
 
             return trophyData;
         }
