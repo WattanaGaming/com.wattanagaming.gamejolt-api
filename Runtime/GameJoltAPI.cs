@@ -43,7 +43,7 @@ namespace WattanaGaming.GameJoltAPI
 
         public void Authenticate(string name, string token, System.Action callback = null)
         {
-            string request = baseURL + "users/auth/?game_id=" + gameID + "&username=" + name + "&user_token=" + token;
+            string request = baseURL + "users/auth/?" + "game_id=" + gameID + "&username=" + name + "&user_token=" + token;
             Debug.Log("Attempting to authenticate as " + name + "...");
             StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
             {
@@ -53,7 +53,7 @@ namespace WattanaGaming.GameJoltAPI
                     Debug.LogError("Authentication failed. " + response["message"]);
                     username = userToken = "";
                     isAuthenticated = false;
-                    OnAuthenticate.Invoke(false);
+                    OnAuthenticate?.Invoke(false);
                     return;
                 }
                 Debug.Log("Authentication successful.");
@@ -61,13 +61,13 @@ namespace WattanaGaming.GameJoltAPI
                 userToken = token;
                 isAuthenticated = true;
                 callback?.Invoke();
-                OnAuthenticate.Invoke(true);
+                OnAuthenticate?.Invoke(true);
             }));
         }
 
         public void GetServerTime(System.Action<DateTime> callback = null)
         {
-            string request = baseURL + "time/?game_id=" + gameID;
+            string request = baseURL + "time/?" + "game_id=" + gameID;
             Debug.Log("Fetching GameJolt server time...");
             StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
             {
@@ -83,15 +83,12 @@ namespace WattanaGaming.GameJoltAPI
             }));
         }
 
-        IEnumerator GetRequest(string uri, System.Action<UnityWebRequest> callback = null)
+        private IEnumerator GetRequest(string uri, System.Action<UnityWebRequest> callback = null)
         {
             UnityWebRequest webRequest = UnityWebRequest.Get(uri);
             // Debug.Log("Sending web request and waiting for response...");
             // Request and wait for the desired page.
             yield return webRequest.SendWebRequest();
-
-            string[] pages = uri.Split('/');
-            int page = pages.Length - 1;
 
             switch (webRequest.result)
             {
