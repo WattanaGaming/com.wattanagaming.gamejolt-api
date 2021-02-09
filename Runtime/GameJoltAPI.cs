@@ -28,8 +28,8 @@ namespace WattanaGaming.GameJoltAPI
         public static string gameID;
 
         // User credentials are cached for later use after authentication.
-        public static string username { get; private set; } = "";
-        public static string userToken { get; private set; } = "";
+        public static string username { get; private set; }
+        public static string userToken { get; private set; }
         public static bool isAuthenticated { get; private set; }
 
         private static string baseURL = "https://api.gamejolt.com/api/game/v1_2/";
@@ -43,7 +43,7 @@ namespace WattanaGaming.GameJoltAPI
 
         public void Authenticate(string name, string token, System.Action callback = null)
         {
-            string request = baseURL + "users/auth/?" + "game_id=" + gameID + "&username=" + name + "&user_token=" + token;
+            string request = $"{baseURL}users/auth/?game_id={gameID}&username={name}&user_token={token}";
             Debug.Log("Attempting to authenticate as " + name + "...");
             StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
             {
@@ -67,7 +67,7 @@ namespace WattanaGaming.GameJoltAPI
 
         public void GetServerTime(System.Action<DateTime> callback = null)
         {
-            string request = baseURL + "time/?" + "game_id=" + gameID;
+            string request = $"{baseURL}time/?game_id={gameID}";
             Debug.Log("Fetching GameJolt server time...");
             StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
             {
