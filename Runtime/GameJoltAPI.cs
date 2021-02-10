@@ -75,6 +75,7 @@ namespace WattanaGaming.GameJoltAPI
                     Debug.LogError($"Authentication failed. {response["message"]}");
                     username = userToken = "";
                     isAuthenticated = false;
+                    isAuthenticating = false;
                     callback?.Invoke(false);
                     OnAuthenticate?.Invoke(false);
                     return;
