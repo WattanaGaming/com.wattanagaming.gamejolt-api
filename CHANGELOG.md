@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 0.3.3 - 2021-02-10
+### Changed
+- `Authenticate()`'s callback now gets invoked upon every authentication attempt and not just successful ones.
+
 ## 0.3.2 - 2021-02-10
 ### Added
 - New `forced` bool parameter to force a re-authentication when using `Authenticate()`.

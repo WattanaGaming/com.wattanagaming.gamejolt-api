@@ -55,9 +55,9 @@ namespace WattanaGaming.GameJoltAPI
         /// </summary>
         /// <param name="name">The user's GJ username.</param>
         /// <param name="token">The user's GJ token.</param>
-        /// <param name="callback">Optional callback. Gets invoked upon a successful authentication.</param>
+        /// <param name="callback">Optional callback.</param>
         /// <param name="forced">Force a re-authentication.</param>
-        public void Authenticate(string name, string token, System.Action callback = null, bool forced = false)
+        public void Authenticate(string name, string token, System.Action<bool> callback = null, bool forced = false)
         {
             if ((isAuthenticated && !forced) || isAuthenticating)
             {
@@ -75,6 +75,7 @@ namespace WattanaGaming.GameJoltAPI
                     Debug.LogError($"Authentication failed. {response["message"]}");
                     username = userToken = "";
                     isAuthenticated = false;
+                    callback?.Invoke(false);
                     OnAuthenticate?.Invoke(false);
                     return;
                 }
@@ -83,7 +84,7 @@ namespace WattanaGaming.GameJoltAPI
                 userToken = token;
                 isAuthenticated = true;
                 isAuthenticating = false;
-                callback?.Invoke();
+                callback?.Invoke(true);
                 OnAuthenticate?.Invoke(true);
             }));
         }
