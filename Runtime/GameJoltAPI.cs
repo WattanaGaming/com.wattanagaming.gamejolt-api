@@ -65,29 +65,26 @@ namespace WattanaGaming.GameJoltAPI
                 return;
             }
             isAuthenticating = true;
-            string request = $"{baseURL}users/auth/?game_id={gameID}&username={name}&user_token={token}";
             Debug.Log($"Attempting to authenticate as {name}...");
-            StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
+            APIRequest("users/auth/", new List<string>() { $"username={name}", $"user_token={token}" }, (JSONNode response) =>
+             {
+                 username = name;
+                 userToken = token;
+                 isAuthenticated = true;
+                 isAuthenticating = false;
+                 callback?.Invoke(true);
+                 OnAuthenticate?.Invoke(true);
+             },
+            () =>
             {
-                JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
-                if (response["success"] == "false")
-                {
-                    Debug.LogError($"Authentication failed. {response["message"]}");
-                    username = userToken = "";
-                    isAuthenticated = false;
-                    isAuthenticating = false;
-                    callback?.Invoke(false);
-                    OnAuthenticate?.Invoke(false);
-                    return;
-                }
-                Debug.Log("Authentication successful.");
-                username = name;
-                userToken = token;
-                isAuthenticated = true;
+                // Debug.LogError($"Authentication failed. {response["message"]}");
+                username = userToken = "";
+                isAuthenticated = false;
                 isAuthenticating = false;
-                callback?.Invoke(true);
-                OnAuthenticate?.Invoke(true);
-            }));
+                callback?.Invoke(false);
+                OnAuthenticate?.Invoke(false);
+                return;
+            });
         }
 
         /// <summary>
@@ -101,19 +98,12 @@ namespace WattanaGaming.GameJoltAPI
                 Debug.LogError("Attempt to grant trophy without an authenticated user.");
                 return;
             }
-            string request = $"{baseURL}trophies/add-achieved/?game_id={gameID}&username={username}&user_token={userToken}&trophy_id={id}";
             Debug.Log($"Granting trophy {id}...");
-            StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
+            APIRequest("trophies/add-achieved/", new List<string>() { $"username={username}", $"user_token={userToken}", $"trophy_id={id}" }, (JSONNode _) =>
             {
-                JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
-                if (response["success"] == "false")
-                {
-                    Debug.LogError($"Error: {response["message"]}");
-                    return;
-                }
                 Debug.Log("Trophy granted.");
                 OnTrophy?.Invoke(id, TrophyEventType.Grant);
-            }));
+            });
         }
 
         /// <summary>
@@ -127,19 +117,12 @@ namespace WattanaGaming.GameJoltAPI
                 Debug.LogError("Attempt to revoke trophy without an authenticated user.");
                 return;
             }
-            string request = $"{baseURL}trophies/remove-achieved/?game_id={gameID}&username={username}&user_token={userToken}&trophy_id={id}";
             Debug.Log($"Revoking trophy {id}...");
-            StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
+            APIRequest("trophies/remove-achieved/", new List<string>() { $"username={username}", $"user_token={userToken}", $"trophy_id={id}" }, (JSONNode _) =>
             {
-                JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
-                if (response["success"] == "false")
-                {
-                    Debug.LogError($"Error: {response["message"]}");
-                    return;
-                }
                 Debug.Log("Trophy revoked.");
                 OnTrophy?.Invoke(id, TrophyEventType.Revoke);
-            }));
+            });
         }
 
         /// <summary>
@@ -156,18 +139,12 @@ namespace WattanaGaming.GameJoltAPI
             }
             string request = $"{baseURL}trophies/fetch/?game_id={gameID}&username={username}&user_token={userToken}&trophy_id={id}";
             Debug.Log($"Fetching trophy data for {id}...");
-            StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
+            APIRequest("trophies/", new List<string>() { $"username={username}", $"user_token={userToken}", $"trophy_id={id}" }, (JSONNode response) =>
             {
-                JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
-                if (response["success"] == "false")
-                {
-                    Debug.LogError($"Error: {response["message"]}");
-                    return;
-                }
                 Debug.Log("Fetched trophy data.");
                 TrophyData trophyData = new TrophyData(response["trophies"].AsArray[0]);
                 callback?.Invoke(trophyData);
-            }));
+            });
         }
 
         /// <summary>
@@ -183,24 +160,14 @@ namespace WattanaGaming.GameJoltAPI
                 Debug.LogError("Attempt to list trophies without an authenticated user.");
                 return;
             }
-            string request;
-            if (all)
+            List<string> queries = new List<string>() { $"username={username}", $"user_token={userToken}" };
+            if (!all)
             {
-                request = $"{baseURL}trophies/fetch/?game_id={gameID}&username={username}&user_token={userToken}";
-            }
-            else
-            {
-                request = $"{baseURL}trophies/fetch/?game_id={gameID}&username={username}&user_token={userToken}&achieved={achieved.ToString().ToLower()}";
+                queries.Add($"achieved={achieved.ToString().ToLower()}");
             }
             Debug.Log("Fetching trophy list...");
-            StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
+            APIRequest("trophies/", queries, (JSONNode response) =>
             {
-                JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
-                if (response["success"] == "false")
-                {
-                    Debug.LogError($"Error: {response["message"]}");
-                    return;
-                }
                 JSONArray trophies = response["trophies"].AsArray;
                 List<TrophyData> trophyDatas = new List<TrophyData>();
                 if (trophies != null)
@@ -212,24 +179,36 @@ namespace WattanaGaming.GameJoltAPI
                 }
                 Debug.Log("Fetched trophy list.");
                 callback?.Invoke(trophyDatas);
-            }));
+            });
         }
 
         public void GetServerTime(System.Action<DateTime> callback = null)
         {
-            string request = $"{baseURL}time/?game_id={gameID}";
-            Debug.Log("Fetching GameJolt server time...");
+            APIRequest("time/", new List<string>(), (JSONNode response) =>
+            {
+                DateTime serverTime = new DateTime(response["year"].AsInt, response["month"].AsInt, response["day"].AsInt, response["hour"].AsInt, response["minute"].AsInt, response["second"].AsInt);
+                callback?.Invoke(serverTime);
+            });
+        }
+
+        public void APIRequest(string endpoint, List<string> queries, System.Action<JSONNode> OnSuccess, System.Action OnError = null)
+        {
+            string request = $"{baseURL}{endpoint}?";
+            request += $"game_id={gameID}";
+            foreach (string query in queries)
+            {
+                request += $"&{query}";
+            }
             StartCoroutine(GetRequest(AddSignature(request), (UnityWebRequest webRequest) =>
             {
                 JSONNode response = JSON.Parse(webRequest.downloadHandler.text)["response"];
                 if (response["success"] == "false")
                 {
                     Debug.LogError($"Error: {response["message"]}");
+                    OnError?.Invoke();
                     return;
                 }
-                Debug.Log("Fetched server time.");
-                DateTime serverTime = new DateTime(response["year"].AsInt, response["month"].AsInt, response["day"].AsInt, response["hour"].AsInt, response["minute"].AsInt, response["second"].AsInt);
-                callback?.Invoke(serverTime);
+                OnSuccess?.Invoke(response);
             }));
         }
 
