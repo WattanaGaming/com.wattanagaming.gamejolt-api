@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 0.3.4 - 2021-02-12
+### Changed
+- Some under-the-hood optimizations...*?*
+    - The wrapper now internally uses `APIRequest()` instead of creating request URLs from scratch.
+    - ~~removed 7.3943662 percent of the lines~~
+
 ## 0.3.3 - 2021-02-10
 ### Changed
 - `Authenticate()`'s callback now gets invoked upon every authentication attempt and not just successful ones.
