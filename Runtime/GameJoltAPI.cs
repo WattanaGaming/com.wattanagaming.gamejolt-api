@@ -137,7 +137,6 @@ namespace WattanaGaming.GameJoltAPI
                 Debug.LogError("Attempt to fetch trophy data without an authenticated user.");
                 return;
             }
-            string request = $"{baseURL}trophies/fetch/?game_id={gameID}&username={username}&user_token={userToken}&trophy_id={id}";
             Debug.Log($"Fetching trophy data for {id}...");
             APIRequest("trophies/", new List<string>() { $"username={username}", $"user_token={userToken}", $"trophy_id={id}" }, (JSONNode response) =>
             {
@@ -215,7 +214,6 @@ namespace WattanaGaming.GameJoltAPI
         private IEnumerator GetRequest(string uri, System.Action<UnityWebRequest> callback = null)
         {
             UnityWebRequest webRequest = UnityWebRequest.Get(uri);
-            // Debug.Log("Sending web request and waiting for response...");
             // Request and wait for the desired page.
             yield return webRequest.SendWebRequest();
 
@@ -228,7 +226,6 @@ namespace WattanaGaming.GameJoltAPI
                     Debug.LogError("Data processing error whilst making a web request.");
                     break;
                 case UnityWebRequest.Result.Success:
-                    // Debug.Log("Response received.");
                     callback?.Invoke(webRequest);
                     break;
             }
