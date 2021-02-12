@@ -191,7 +191,7 @@ namespace WattanaGaming.GameJoltAPI
             });
         }
 
-        public void APIRequest(string endpoint, List<string> queries, System.Action<JSONNode> OnSuccess, System.Action OnError = null)
+        void APIRequest(string endpoint, List<string> queries, System.Action<JSONNode> OnSuccess, System.Action OnError = null)
         {
             string request = $"{baseURL}{endpoint}?";
             request += $"game_id={gameID}";
