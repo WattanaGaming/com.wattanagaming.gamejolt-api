@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- All methods have been rewritten to be static and use async. This will make handling errors much easier and eliminate the need for most(if not all) of the callbacks internally used.
 
 ## 0.3.4 - 2021-02-12
 ### Changed

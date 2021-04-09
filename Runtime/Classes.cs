@@ -36,4 +36,14 @@ namespace WattanaGaming.GameJoltAPI
         Grant,
         Revoke
     }
+
+    public enum APIVersion
+    {
+        v1_2
+    }
+
+    public class APIError : System.Exception
+    {
+        public APIError(string message) : base(message) { }
+    }
 }
