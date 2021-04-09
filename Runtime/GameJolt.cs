@@ -15,7 +15,7 @@ namespace WattanaGaming.GameJoltAPI
         public static string GameKey;
 
         // User credentials are cached for later use after authentication.
-        public static string Username { get; private set; }
+        public static string UserName { get; private set; }
         public static string UserToken { get; private set; }
 
         public static bool IsAuthenticated { get; private set; }
@@ -27,84 +27,120 @@ namespace WattanaGaming.GameJoltAPI
         public static event System.Action OnAuthenticated;
         public static event System.Action<TrophyEventType, int> OnTrophy;
 
-        public static async Task Authenticate(string name, string token, bool forced = false)
+        public static class User
         {
-            if ((IsAuthenticated && !forced) || IsAuthenticating)
+            public static async Task Authenticate(string name, string token, bool forced = false)
             {
-                throw new APIError("Already authenticated or is currently authenticating.");
-            }
-            Debug.Log($"Attempting to authenticate as {name}...");
-            IsAuthenticating = true;
-            try
-            {
-                await APIRequest("users/auth/", new string[] { $"username={name}", $"user_token={token}" });
-                Username = name;
-                UserToken = token;
-                IsAuthenticated = true;
-                IsAuthenticating = false;
-                Debug.Log("Successfully authenticated.");
-                OnAuthenticated?.Invoke();
-            }
-            catch (APIError)
-            {
-                Username = UserToken = "";
-                IsAuthenticated = false;
-                IsAuthenticating = false;
-                throw;
-            }
-        }
-
-        public static async Task GrantTrophy(int id)
-        {
-            RequireAuthenticated("Attempt to grant trophy without an authenticated user.");
-            Debug.Log($"Granting trophy {id}.");
-            await APIRequest("trophies/add-achieved/", new string[] { $"username={Username}", $"user_token={UserToken}", $"trophy_id={id}" });
-            Debug.Log("Trophy granted.");
-            OnTrophy?.Invoke(TrophyEventType.Grant, id);
-        }
-
-        public static async Task RevokeTrophy(int id)
-        {
-            RequireAuthenticated("Attempt to revoke trophy without an authenticated user.");
-            Debug.Log($"Revoking trophy {id}.");
-            await APIRequest("trophies/removed-achieved/", new string[] { $"username={Username}", $"user_token={UserToken}", $"trophy_id={id}" });
-            Debug.Log("Trophy revoked.");
-            OnTrophy?.Invoke(TrophyEventType.Revoke, id);
-        }
-
-        public static async Task<TrophyData> FetchTrophy(int id)
-        {
-            RequireAuthenticated("Attempt to fetch trophy data without an authenticated user.");
-            Debug.Log($"Fetching trophy data for {id}...");
-            JSONNode response = await APIRequest("trophies/", new string[] { $"username={Username}", $"user_token={UserToken}", $"trophy_id={id}" });
-            Debug.Log("Fetched trophy data.");
-            TrophyData trophyData = new TrophyData(response["trophies"].AsArray[0]);
-            return trophyData;
-        }
-
-        public static async Task<List<TrophyData>> ListTrophies(bool all = true, bool achieved = true)
-        {
-            RequireAuthenticated("Attempt to list trophies without an authenticated user.");
-            List<string> queries = new List<string>() { $"username={Username}", $"user_token={UserToken}" };
-            if (!all)
-            {
-                queries.Add($"achieved={achieved.ToString().ToLower()}");
-            }
-
-            Debug.Log("Fetching trophy list...");
-            JSONArray trophies = (await APIRequest("trophies/", queries.ToArray()))["trophies"].AsArray;
-            List<TrophyData> trophyDatas = new List<TrophyData>();
-            if (trophies != null)
-            {
-                foreach (JSONObject trophy in trophies)
+                if ((IsAuthenticated && !forced) || IsAuthenticating)
                 {
-                    trophyDatas.Add(new TrophyData(trophy));
+                    throw new APIError("Already authenticated or is currently authenticating.");
+                }
+                Debug.Log($"Attempting to authenticate as {name}...");
+                IsAuthenticating = true;
+                try
+                {
+                    await APIRequest("users/auth/", new string[] { $"username={name}", $"user_token={token}" });
+                    UserName = name;
+                    UserToken = token;
+                    IsAuthenticated = true;
+                    IsAuthenticating = false;
+                    Debug.Log("Successfully authenticated.");
+                    OnAuthenticated?.Invoke();
+                }
+                catch (APIError)
+                {
+                    UserName = UserToken = "";
+                    IsAuthenticated = false;
+                    IsAuthenticating = false;
+                    throw;
                 }
             }
-            Debug.Log("Fetched trophy list.");
-            return trophyDatas;
 
+            public static async Task<UserData> Fetch(string user, bool id = false)
+            {
+                return (await Fetch(new string[] { user }, id))[0];
+            }
+
+            public static async Task<List<UserData>> Fetch(string[] users, bool id = false)
+            {
+                Debug.Log($"Fetching user data for {string.Join(",", users)}...");
+                List<string> queries = new List<string>();
+                if (id == true)
+                {
+                    queries.Add($"user_id={string.Join(",", users)}");
+                }
+                else
+                {
+                    queries.Add($"username={string.Join(",", users)}");
+                }
+                JSONArray userArray = (await APIRequest("users/", queries.ToArray()))["users"].AsArray;
+                List<UserData> userDatas = new List<UserData>();
+                if (userArray != null)
+                {
+                    foreach (JSONObject user in userArray)
+                    {
+                        userDatas.Add(new UserData(user));
+                    }
+                }
+                Debug.Log("Fetched user data.");
+                return userDatas;
+            }
         }
+
+        public static class Trophy
+        {
+            public static async Task Grant(int id)
+            {
+                RequireAuthenticated("Attempt to grant trophy without an authenticated user.");
+                Debug.Log($"Granting trophy {id}...");
+                await APIRequest("trophies/add-achieved/", new string[] { $"username={UserName}", $"user_token={UserToken}", $"trophy_id={id}" });
+                Debug.Log("Trophy granted.");
+                OnTrophy?.Invoke(TrophyEventType.Grant, id);
+            }
+
+            public static async Task Revoke(int id)
+            {
+                RequireAuthenticated("Attempt to revoke trophy without an authenticated user.");
+                Debug.Log($"Revoking trophy {id}...");
+                await APIRequest("trophies/remove-achieved/", new string[] { $"username={UserName}", $"user_token={UserToken}", $"trophy_id={id}" });
+                Debug.Log("Trophy revoked.");
+                OnTrophy?.Invoke(TrophyEventType.Revoke, id);
+            }
+
+            public static async Task<TrophyData> Fetch(int id)
+            {
+                RequireAuthenticated("Attempt to fetch trophy data without an authenticated user.");
+                Debug.Log($"Fetching trophy data for {id}...");
+                JSONNode response = await APIRequest("trophies/", new string[] { $"username={UserName}", $"user_token={UserToken}", $"trophy_id={id}" });
+                Debug.Log("Fetched trophy data.");
+                TrophyData trophyData = new TrophyData(response["trophies"].AsArray[0]);
+                return trophyData;
+            }
+
+            public static async Task<List<TrophyData>> List(bool all = true, bool achieved = true)
+            {
+                RequireAuthenticated("Attempt to list trophies without an authenticated user.");
+                List<string> queries = new List<string>() { $"username={UserName}", $"user_token={UserToken}" };
+                if (!all)
+                {
+                    queries.Add($"achieved={achieved.ToString().ToLower()}");
+                }
+
+                Debug.Log("Fetching trophy list...");
+                JSONArray trophies = (await APIRequest("trophies/", queries.ToArray()))["trophies"].AsArray;
+                List<TrophyData> trophyDatas = new List<TrophyData>();
+                if (trophies != null)
+                {
+                    foreach (JSONObject trophy in trophies)
+                    {
+                        trophyDatas.Add(new TrophyData(trophy));
+                    }
+                }
+                Debug.Log("Fetched trophy list.");
+                return trophyDatas;
+            }
+        }
+        
 
         public static async Task<DateTime> GetServerTime(bool localTime = true)
         {
@@ -119,7 +155,7 @@ namespace WattanaGaming.GameJoltAPI
             }
         }
 
-        private static void RequireAuthenticated(string message = "Not authenticated")
+        private static void RequireAuthenticated(string message = "Not authenticated.")
         {
             if (!IsAuthenticated)
             {
@@ -181,7 +217,7 @@ namespace WattanaGaming.GameJoltAPI
             return hashString.PadLeft(32, '0');
         }
 
-        public static class Helper
+        private static class Helper
         {
             public static async Task<string> GET(string url)
             {
@@ -196,9 +232,9 @@ namespace WattanaGaming.GameJoltAPI
                     case UnityWebRequest.Result.ConnectionError:
                         throw new System.Exception("A connection error has occured.");
                     case UnityWebRequest.Result.DataProcessingError:
-                        throw new System.Exception("A data processing error has occured");
+                        throw new System.Exception("A data processing error has occured.");
                     case UnityWebRequest.Result.ProtocolError:
-                        throw new System.Exception("A protocol error has occured");
+                        throw new System.Exception("A protocol error has occured.");
                     case UnityWebRequest.Result.Success:
                         result = webRequest.downloadHandler.text;
                         break;
