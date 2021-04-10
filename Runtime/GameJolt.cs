@@ -2,10 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Networking;
 using DateTime = System.DateTime;
 using DateTimeOffset = System.DateTimeOffset;
 using SimpleJSON;
+using WattanaGaming.WebRequest;
 
 namespace WattanaGaming.GameJoltAPI
 {
@@ -182,7 +182,7 @@ namespace WattanaGaming.GameJoltAPI
                 request += $"&{query}";
             }
 
-            string result = await Helper.GET(AddSignature(request));
+            string result = (await AsyncWebRequest.GET(AddSignature(request))).downloadHandler.text;
             JSONNode response = JSON.Parse(result)["response"];
             if (response["success"] == "false")
             {
@@ -194,53 +194,29 @@ namespace WattanaGaming.GameJoltAPI
 
         private static string AddSignature(string strToSign)
         {
-            return $"{strToSign}&signature={Md5Sum(strToSign + GameKey)}";
-        }
-
-        private static string Md5Sum(string strToEncrypt)
-        {
-            System.Text.UTF8Encoding ue = new System.Text.UTF8Encoding();
-            byte[] bytes = ue.GetBytes(strToEncrypt);
-
-            // encrypt bytes
-            System.Security.Cryptography.MD5CryptoServiceProvider md5 = new System.Security.Cryptography.MD5CryptoServiceProvider();
-            byte[] hashBytes = md5.ComputeHash(bytes);
-
-            // Convert the encrypted bytes back to a string (base 16)
-            string hashString = "";
-
-            for (int i = 0; i < hashBytes.Length; i++)
-            {
-                hashString += System.Convert.ToString(hashBytes[i], 16).PadLeft(2, '0');
-            }
-
-            return hashString.PadLeft(32, '0');
+            return $"{strToSign}&signature={Helper.Md5Sum(strToSign + GameKey)}";
         }
 
         private static class Helper
         {
-            public static async Task<string> GET(string url)
+            public static string Md5Sum(string strToEncrypt)
             {
-                UnityWebRequest webRequest = UnityWebRequest.Get(url);
-                UnityWebRequestAsyncOperation asyncOperation = webRequest.SendWebRequest();
-                while (!asyncOperation.isDone) { await Task.Yield(); }
+                System.Text.UTF8Encoding ue = new System.Text.UTF8Encoding();
+                byte[] bytes = ue.GetBytes(strToEncrypt);
 
-                string result = "";
+                // encrypt bytes
+                System.Security.Cryptography.MD5CryptoServiceProvider md5 = new System.Security.Cryptography.MD5CryptoServiceProvider();
+                byte[] hashBytes = md5.ComputeHash(bytes);
 
-                switch (webRequest.result)
+                // Convert the encrypted bytes back to a string (base 16)
+                string hashString = "";
+
+                for (int i = 0; i < hashBytes.Length; i++)
                 {
-                    case UnityWebRequest.Result.ConnectionError:
-                        throw new System.Exception("A connection error has occured.");
-                    case UnityWebRequest.Result.DataProcessingError:
-                        throw new System.Exception("A data processing error has occured.");
-                    case UnityWebRequest.Result.ProtocolError:
-                        throw new System.Exception("A protocol error has occured.");
-                    case UnityWebRequest.Result.Success:
-                        result = webRequest.downloadHandler.text;
-                        break;
+                    hashString += System.Convert.ToString(hashBytes[i], 16).PadLeft(2, '0');
                 }
 
-                return result;
+                return hashString.PadLeft(32, '0');
             }
         }
     }

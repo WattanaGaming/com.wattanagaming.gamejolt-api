@@ -6,5 +6,8 @@
   "author": {
     "name": "Atirut Wattanamongkol"
   },
-  "description": "A library for communicating with GameJolt's Game API"
+  "description": "A library for communicating with GameJolt's Game API",
+  "dependencies": {
+    "com.wattanagaming.async-webrequest": "1.0.0"
+  }
 }

@@ -1,3 +1,16 @@
 {
-	"name": "com.wattanagaming.gamejolt-api"
+    "name": "com.wattanagaming.gamejolt-api",
+    "rootNamespace": "",
+    "references": [
+        "GUID:b301b9844fd6a564c99c2d8e33c0d04c"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
