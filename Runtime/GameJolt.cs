@@ -49,18 +49,11 @@ namespace WattanaGaming.GameJoltAPI
                 }
                 catch (AuthError)
                 {
-                    Deauthenticate();
+                    UserName = UserToken = "";
+                    IsAuthenticated = false;
                     IsAuthenticating = false;
                     throw;
                 }
-            }
-
-            public static void Deauthenticate()
-            {
-                if (IsAuthenticated == false) { throw new AuthError("Cannot deauthenticate: already not authenticated."); }
-                UserName = UserToken = "";
-                IsAuthenticated = false;
-                Debug.Log("Deauthenticated.");
             }
 
             public static async Task<UserData> Fetch(string user, bool id = false)
@@ -91,6 +84,52 @@ namespace WattanaGaming.GameJoltAPI
                 }
                 Debug.Log("Fetched user data.");
                 return userDatas;
+            }
+        }
+
+        public static class Session
+        {
+            public static async Task Open()
+            {
+                RequireAuthenticated("Attempt to open a game session without an authenticated user.");
+                Debug.Log("Opening a new game session...");
+                await APIRequest("sessions/open/", new string[] { $"username={UserName}", $"user_token={UserToken}" });
+                Debug.Log("Opened a new game session.");
+            }
+
+            public static async Task Ping(bool setStatus = false, SessionStatus status = SessionStatus.Idle)
+            {
+                RequireAuthenticated("Attempt to ping a game session without an authenticated user.");
+                Debug.Log("Pinging the game session...");
+                List<string> queries = new List<string>() { $"username={UserName}", $"user_token={UserToken}" };
+                if (setStatus)
+                {
+                    queries.Add(status switch
+                    {
+                        SessionStatus.Active => "active",
+                        SessionStatus.Idle => "idle",
+                        _ => throw new APIError("Invalid session status.")
+                    });
+                }
+                await APIRequest("sessions/ping/", queries.ToArray());
+                Debug.Log("Pinged game session.");
+            }
+
+            public static async Task<bool> Check()
+            {
+                RequireAuthenticated("Attempt to check a game session without an authenticated user.");
+                JSONNode response = await APIRequest("sessions/check/", new string[] { $"username={UserName}", $"user_token={UserToken}" }, false);
+                if (response["message"]) { throw new APIError(response["message"]); }
+                Debug.Log("Checked game session.");
+                return response["success"];
+            }
+
+            public static async Task Close()
+            {
+                RequireAuthenticated("Attempt to close a game session without an authenticated user.");
+                Debug.Log("Closing the game session...");
+                await APIRequest("sessions/close/", new string[] { $"username={UserName}", $"user_token={UserToken}" });
+                Debug.Log("Closed the game session.");
             }
         }
 

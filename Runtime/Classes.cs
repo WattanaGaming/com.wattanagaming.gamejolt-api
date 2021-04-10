@@ -127,6 +127,12 @@ namespace WattanaGaming.GameJoltAPI
         Revoke
     }
 
+    public enum SessionStatus
+    {
+        Active,
+        Idle
+    }
+
     public enum APIVersion
     {
         v1_2
@@ -139,9 +145,6 @@ namespace WattanaGaming.GameJoltAPI
 
     public class AuthError : System.Exception
     {
-        public AuthError(string message) : base(message)
-        {
-            if (GameJolt.IsAuthenticated == true) { GameJolt.User.Deauthenticate(); }
-        }
+        public AuthError(string message) : base(message) { }
     }
 }

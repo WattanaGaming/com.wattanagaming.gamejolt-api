@@ -6,10 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Session system.
 - Added a null check for the `queries` arugment in `APIRequest`.
 - More error types for catching different types of error.
-- Method for deauthenticating the user. This will later be used a lot in the session system.
-- Optional argument for `APIRequest` for specifying whether or not to automatically handle errors(useful in cases where the endpoint behavior for errors is different).
+- Optional argument for `APIRequest` for specifying whether or not to automatically handle errors(useful in cases where the endpoint behavior for error is different).
 
 ### Changed
 - Updated some internally used variable names.
