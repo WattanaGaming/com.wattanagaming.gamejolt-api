@@ -1,10 +1,13 @@
 {
   "name": "com.wattanagaming.gamejolt-api",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "displayName": "GameJolt API",
   "type": "library",
   "author": {
     "name": "Atirut Wattanamongkol"
   },
-  "description": "A library for communicating with GameJolt's Game API"
+  "description": "A library for communicating with GameJolt's Game API",
+  "dependencies": {
+    "com.wattanagaming.async-webrequest": "1.0.0"
+  }
 }

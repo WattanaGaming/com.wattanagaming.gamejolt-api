@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 0.3.5 - 2021-04-10
+### Changed
+- All methods have been rewritten to be static and use async. This will make handling errors much easier and eliminate the need for all of the callbacks internally used.
+- Organized methods into their respective sub-classes.
+- Moved GET method in the helper class to a new package.
+
+### Removed
+- Basically all of the old coroutine-reliant methods.
+
 ## 0.3.4 - 2021-02-12
 ### Changed
 - Some under-the-hood optimizations...*?*
