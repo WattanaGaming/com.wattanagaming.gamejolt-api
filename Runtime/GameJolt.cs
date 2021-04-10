@@ -33,7 +33,7 @@ namespace WattanaGaming.GameJoltAPI
             {
                 if ((IsAuthenticated && !forced) || IsAuthenticating)
                 {
-                    throw new APIError("Already authenticated or is currently authenticating.");
+                    throw new AuthError("Already authenticated or is currently authenticating.");
                 }
                 Debug.Log($"Attempting to authenticate as {name}...");
                 IsAuthenticating = true;
@@ -47,13 +47,20 @@ namespace WattanaGaming.GameJoltAPI
                     Debug.Log("Successfully authenticated.");
                     OnAuthenticated?.Invoke();
                 }
-                catch (APIError)
+                catch (AuthError)
                 {
-                    UserName = UserToken = "";
-                    IsAuthenticated = false;
+                    Deauthenticate();
                     IsAuthenticating = false;
                     throw;
                 }
+            }
+
+            public static void Deauthenticate()
+            {
+                if (IsAuthenticated == false) { throw new AuthError("Cannot deauthenticate: already not authenticated."); }
+                UserName = UserToken = "";
+                IsAuthenticated = false;
+                Debug.Log("Deauthenticated.");
             }
 
             public static async Task<UserData> Fetch(string user, bool id = false)
@@ -144,7 +151,7 @@ namespace WattanaGaming.GameJoltAPI
 
         public static async Task<DateTime> GetServerTime(bool localTime = true)
         {
-            JSONNode response = await APIRequest("time/", new string[] { });
+            JSONNode response = await APIRequest("time/", null);
             if (localTime)
             {
                 return DateTimeOffset.FromUnixTimeSeconds(response["timestamp"].AsLong).ToLocalTime().DateTime;
@@ -159,11 +166,11 @@ namespace WattanaGaming.GameJoltAPI
         {
             if (!IsAuthenticated)
             {
-                throw new APIError(message);
+                throw new AuthError(message);
             }
         }
 
-        private static async Task<JSONNode> APIRequest(string endpoint, params string[] queries)
+        private static async Task<JSONNode> APIRequest(string endpoint, string[] queries, bool handleerrors = true)
         {
             string request = "";
 
@@ -177,16 +184,26 @@ namespace WattanaGaming.GameJoltAPI
                     throw new APIError("Unsupported API version.");
             }
             request += $"{endpoint}?game_id={GameID}";
-            foreach (string query in queries)
+            if (queries != null)
             {
-                request += $"&{query}";
+                foreach (string query in queries)
+                {
+                    request += $"&{query}";
+                }
             }
 
             string result = (await AsyncWebRequest.GET(AddSignature(request))).downloadHandler.text;
             JSONNode response = JSON.Parse(result)["response"];
-            if (response["success"] == "false")
+            if (response["success"] == "false" && handleerrors)
             {
-                throw new APIError(response["message"]);
+                string message = response["message"];
+                switch (message)
+                {
+                    case "No such user with the credentials passed in could be found.":
+                        throw new AuthError(message);
+                    default:
+                        throw new APIError(message);
+                }
             }
             
             return response;

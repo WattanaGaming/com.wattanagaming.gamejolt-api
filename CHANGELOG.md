@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Added a null check for the `queries` arugment in `APIRequest`.
+- More error types for catching different types of error.
+- Method for deauthenticating the user. This will later be used a lot in the session system.
+- Optional argument for `APIRequest` for specifying whether or not to automatically handle errors(useful in cases where the endpoint behavior for errors is different).
+
+### Changed
+- Updated some internally used variable names.
+- Update `UserData` and `TrophyData` to use enums where possible.
 
 ## 0.3.5 - 2021-04-10
 ### Changed
